@@ -9,15 +9,27 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 contract MiniPair is ERC20, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
+    // Address of the factory that created this pair
     address public immutable factory;
+
+    // Addresses of the tokens in the pair
     address public immutable token0;
     address public immutable token1;
-    uint256 public immutable fee; // Fee in basis points (1/10000)
 
+    // Fee applied to swaps (in basis points)
+    uint256 public immutable fee;
+
+    // Reserves of the tokens in the pool
     uint256 public reserve0;
     uint256 public reserve1;
+
+    // Lock to prevent reentrancy
     uint256 private unlocked = 1;
 
+    /// @notice Constructor to initialize the pair
+    /// @param _token0 Address of the first token
+    /// @param _token1 Address of the second token
+    /// @param _fee Fee applied to swaps (in basis points)
     constructor(address _token0, address _token1, uint256 _fee) ERC20("Mini LP Token", "MINI-LP") {
         factory = msg.sender;
         token0 = _token0;
@@ -25,6 +37,7 @@ contract MiniPair is ERC20, ReentrancyGuard {
         fee = _fee;
     }
 
+    // Modifier to prevent reentrancy
     modifier lock() {
         require(unlocked == 1, "MiniPair: LOCKED");
         unlocked = 0;
@@ -32,11 +45,10 @@ contract MiniPair is ERC20, ReentrancyGuard {
         unlocked = 1;
     }
 
-    function addLiquidity(address to)
-        external
-        nonReentrant
-        returns (uint256 liquidity)
-    {
+    /// @notice Adds liquidity to the pool
+    /// @param to Address to receive the LP tokens
+    /// @return liquidity Amount of LP tokens minted
+    function addLiquidity(address to) external nonReentrant returns (uint256 liquidity) {
         uint256 _reserve0 = reserve0;
         uint256 _reserve1 = reserve1;
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
@@ -61,26 +73,30 @@ contract MiniPair is ERC20, ReentrancyGuard {
         _update();
     }
 
-    function removeLiquidity(uint256 liquidity, address to)
-        external
-        nonReentrant
-        returns (uint256 amount0, uint256 amount1)
-    {
-        // Calculate token amounts based on liquidity proportion
+    /// @notice Removes liquidity from the pool
+    /// @param liquidity Amount of LP tokens to burn
+    /// @param to Address to receive the underlying tokens
+    /// @return amount0 Amount of token0 received
+    /// @return amount1 Amount of token1 received
+    function removeLiquidity(uint256 liquidity, address to) external nonReentrant returns (uint256 amount0, uint256 amount1) {
         uint256 _totalSupply = totalSupply();
+        require (_totalSupply > liquidity, "MiniPair: INSUFFICIENT_LIQUIDITY");
+        
         amount0 = (liquidity * reserve0) / _totalSupply;
         amount1 = (liquidity * reserve1) / _totalSupply;
         require(amount0 > 0 && amount1 > 0, "MiniPair: INSUFFICIENT_LIQUIDITY_BURNED");
 
-        // Burn LP tokens and transfer underlying tokens
         _burn(to, liquidity);
         IERC20(token0).safeTransfer(to, amount0);
         IERC20(token1).safeTransfer(to, amount1);
 
-        // Update reserves
         _update();
     }
 
+    /// @notice Swaps tokens in the pool
+    /// @param amount0Out Amount of token0 to send out
+    /// @param amount1Out Amount of token1 to send out
+    /// @param to Address to receive the output tokens
     function swap(uint256 amount0Out, uint256 amount1Out, address to) external lock nonReentrant {
         require(amount0Out > 0 || amount1Out > 0, "MiniPair: INSUFFICIENT_OUTPUT_AMOUNT");
         require(amount0Out < reserve0 && amount1Out < reserve1, "MiniPair: INSUFFICIENT_LIQUIDITY");
@@ -108,12 +124,7 @@ contract MiniPair is ERC20, ReentrancyGuard {
         _update();
     }
 
-    function quote(uint256 amountA, uint256 reserveA, uint256 reserveB) internal pure returns (uint256 amountB) {
-        require(amountA > 0, "MiniPair: INSUFFICIENT_AMOUNT");
-        require(reserveA > 0 && reserveB > 0, "MiniPair: INSUFFICIENT_LIQUIDITY");
-        amountB = (amountA * reserveB) / reserveA;
-    }
-
+    /// @notice Updates the reserves of the pool
     function _update() private {
         uint256 balance0 = IERC20(token0).balanceOf(address(this));
         uint256 balance1 = IERC20(token1).balanceOf(address(this));
@@ -121,11 +132,7 @@ contract MiniPair is ERC20, ReentrancyGuard {
         reserve1 = balance1;
     }
 
-    // Helper functions
-    function min(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        z = x < y ? x : y;
-    }
-
+    // Helper function to calculate the square root of a number
     function sqrt(uint256 y) internal pure returns (uint256 z) {
         if (y > 3) {
             z = y;

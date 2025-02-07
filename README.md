@@ -95,7 +95,10 @@ flowchart TD
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
 
 ```bash
+# install foundryup
 curl -L https://foundry.paradigm.xyz | bash
+# install forge, anvil, cast
+foundryup
 ```
 
 ### Setup
@@ -186,6 +189,36 @@ cast --to-dec $(cast call 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 "balanceOf(
 cast --to-dec $(cast call 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 "balanceOf(address)" 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 --rpc-url $RPC_URL)
 ```
 
+### Testing
+
+1. Run tests
+```bash
+forge test
+```
+
+2. Run coverage
+```bash
+forge coverage
+```
+
+```table
+╭------------------------+------------------+------------------+----------------+-----------------╮
+| File                   | % Lines          | % Statements     | % Branches     | % Funcs         |
++=================================================================================================+
+| script/Deploy.s.sol    | 0.00% (0/14)     | 0.00% (0/18)     | 100.00% (0/0)  | 0.00% (0/1)     |
+|------------------------+------------------+------------------+----------------+-----------------|
+| src/MiniFactory.sol    | 100.00% (12/12)  | 100.00% (11/11)  | 66.67% (4/6)   | 100.00% (2/2)   |
+|------------------------+------------------+------------------+----------------+-----------------|
+| src/MiniPair.sol       | 97.01% (65/67)   | 96.34% (79/82)   | 56.00% (14/25) | 100.00% (7/7)   |
+|------------------------+------------------+------------------+----------------+-----------------|
+| src/MiniRouter.sol     | 97.22% (70/72)   | 97.53% (79/81)   | 75.00% (30/40) | 100.00% (11/11) |
+|------------------------+------------------+------------------+----------------+-----------------|
+| src/mock/MockToken.sol | 100.00% (4/4)    | 100.00% (2/2)    | 100.00% (0/0)  | 100.00% (2/2)   |
+|------------------------+------------------+------------------+----------------+-----------------|
+| Total                  | 89.35% (151/169) | 88.14% (171/194) | 67.61% (48/71) | 95.65% (22/23)  |
+╰------------------------+------------------+------------------+----------------+-----------------╯
+```
+
 ## Deployment to Sepolia
 
 1. Create a `.env` file with your private key and Infura/Alchemy API key:
@@ -207,54 +240,54 @@ forge script script/Deploy.s.sol:Deploy --rpc-url $RPC_URL --broadcast
 ```
 
 Here are the deployed contracts' addresses:
-```log
-  Deployed contracts:
-  Factory: 0x7b9EA8a077f25CdEb98c1DfCf795c6b96c0B002b
-  Router: 0x986698D6840ef385CF23620AeFe1568989D7586C
-  Token A: 0xB61F70350545713349f1EddC770b031466919079
-  Token B: 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B
-```
+
+|  **Contract Name**  |  **Address  (Etherscan Link)**                                                                  |
+|---------------------|---------------------------------------------------------------------------------------------------|
+| Factory            | [0x7b9EA8a077f25CdEb98c1DfCf795c6b96c0B002b](https://sepolia.etherscan.io/address/0x7b9EA8a077f25CdEb98c1DfCf795c6b96c0B002b)  |
+| Router             | [0x986698D6840ef385CF23620AeFe1568989D7586C](https://sepolia.etherscan.io/address/0x986698D6840ef385CF23620AeFe1568989D7586C)  |
+| Token A            | [0xB61F70350545713349f1EddC770b031466919079](https://sepolia.etherscan.io/address/0xB61F70350545713349f1EddC770b031466919079)  |
+| Token B            | [0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B](https://sepolia.etherscan.io/address/0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B)  |
 
 3. Interact with the contracts using Cast:
 ```bash
 # Mint tokens for testing
-cast send 0xcE9e164eade6b7f871f43736290f291d278329d3 "mint(address,uint256)" <your_wallet_address> 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+cast send 0xB61F70350545713349f1EddC770b031466919079 "mint(address,uint256)" <your_wallet_address> 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
-cast send 0x858D06A24b7C721663a766b94083e66ff5B90786 "mint(address,uint256)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+cast send 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B "mint(address,uint256)" <your_wallet_address> 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
 # Check token balances
-cast --to-dec $(cast call 0xcE9e164eade6b7f871f43736290f291d278329d3 "balanceOf(address)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 --rpc-url $RPC_URL)
+cast --to-dec $(cast call 0xB61F70350545713349f1EddC770b031466919079 "balanceOf(address)" <your_wallet_address> --rpc-url $RPC_URL)
 
-cast --to-dec $(cast call 0x858D06A24b7C721663a766b94083e66ff5B90786 "balanceOf(address)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 --rpc-url $RPC_URL)
+cast --to-dec $(cast call 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B "balanceOf(address)" <your_wallet_address> --rpc-url $RPC_URL)
 
 # Approve tokens for router
-cast send 0xcE9e164eade6b7f871f43736290f291d278329d3 "approve(address,uint256)" 0x80c9C27650a2caDb95305357b005F2b1c5b809E4 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+cast send 0xB61F70350545713349f1EddC770b031466919079 "approve(address,uint256)" 0x986698D6840ef385CF23620AeFe1568989D7586C 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
-cast send 0x858D06A24b7C721663a766b94083e66ff5B90786 "approve(address,uint256)" 0x80c9C27650a2caDb95305357b005F2b1c5b809E4 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+cast send 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B "approve(address,uint256)" 0x986698D6840ef385CF23620AeFe1568989D7586C 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
 # Add liquidity
-cast send 0x80c9C27650a2caDb95305357b005F2b1c5b809E4 "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)"  0xcE9e164eade6b7f871f43736290f291d278329d3 0x858D06A24b7C721663a766b94083e66ff5B90786 10000 20000 1000 2000 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 1000000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+cast send 0x986698D6840ef385CF23620AeFe1568989D7586C "addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)"  0xB61F70350545713349f1EddC770b031466919079 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B 10000 20000 1000 2000 <your_wallet_address> 1000000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
 # Check token balances
-cast --to-dec $(cast call 0xcE9e164eade6b7f871f43736290f291d278329d3 "balanceOf(address)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 --rpc-url $RPC_URL)
+cast --to-dec $(cast call 0xB61F70350545713349f1EddC770b031466919079 "balanceOf(address)" <your_wallet_address> --rpc-url $RPC_URL)
 
-cast --to-dec $(cast call 0x858D06A24b7C721663a766b94083e66ff5B90786 "balanceOf(address)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 --rpc-url $RPC_URL)
+cast --to-dec $(cast call 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B "balanceOf(address)" <your_wallet_address> --rpc-url $RPC_URL)
 
 # Swap tokens
-cast send 0x80c9C27650a2caDb95305357b005F2b1c5b809E4 "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)" 1000 100 "[0xcE9e164eade6b7f871f43736290f291d278329d3,0x858D06A24b7C721663a766b94083e66ff5B90786]" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+cast send 0x986698D6840ef385CF23620AeFe1568989D7586C "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)" 1000 100 "[0xB61F70350545713349f1EddC770b031466919079,0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B]" <your_wallet_address> 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
 # Check token balances
-cast --to-dec $(cast call 0xcE9e164eade6b7f871f43736290f291d278329d3 "balanceOf(address)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 --rpc-url $RPC_URL)
+cast --to-dec $(cast call 0xB61F70350545713349f1EddC770b031466919079 "balanceOf(address)" <your_wallet_address> --rpc-url $RPC_URL)
 
-cast --to-dec $(cast call 0x858D06A24b7C721663a766b94083e66ff5B90786 "balanceOf(address)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 --rpc-url $RPC_URL)
+cast --to-dec $(cast call 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B "balanceOf(address)" <your_wallet_address> --rpc-url $RPC_URL)
 
 # Remove liquidity
-cast send 0x80c9C27650a2caDb95305357b005F2b1c5b809E4 "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)"  0xcE9e164eade6b7f871f43736290f291d278329d3 0x858D06A24b7C721663a766b94083e66ff5B90786 1000 100 100 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+cast send 0x986698D6840ef385CF23620AeFe1568989D7586C "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)"  0xB61F70350545713349f1EddC770b031466919079 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B 1000 100 100 <your_wallet_address> 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
 # Check token balances
-cast --to-dec $(cast call 0xcE9e164eade6b7f871f43736290f291d278329d3 "balanceOf(address)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 --rpc-url $RPC_URL)
+cast --to-dec $(cast call 0xB61F70350545713349f1EddC770b031466919079 "balanceOf(address)" <your_wallet_address> --rpc-url $RPC_URL)
 
-cast --to-dec $(cast call 0x858D06A24b7C721663a766b94083e66ff5B90786 "balanceOf(address)" 0xeb5748aa27320da9bc19e887a2d87c4dec0f0506 --rpc-url $RPC_URL)
+cast --to-dec $(cast call 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B "balanceOf(address)" <your_wallet_address> --rpc-url $RPC_URL)
 ```
 
 ## Design Decisions & Assumptions
@@ -267,17 +300,9 @@ cast --to-dec $(cast call 0x858D06A24b7C721663a766b94083e66ff5B90786 "balanceOf(
    - No flash loans
    - No price oracles
    - No governance mechanism
-   - No LP tokens (simplified for proof of concept)
 
 3. Security Considerations
    - Reentrancy protection
    - Checks-Effects-Interactions pattern
    - SafeERC20 for token transfers
 
-## Test Coverage
-
-The project aims for 90%+ test coverage focusing on:
-- Pair creation
-- Liquidity provision
-- Swap operations
-- Edge cases and error conditions

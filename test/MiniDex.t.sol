@@ -4,8 +4,8 @@ pragma solidity ^0.8.19;
 import "forge-std/Test.sol";
 import "../src/MiniFactory.sol";
 import "../src/MiniRouter.sol";
-import "../src/mock/MockToken.sol";
 import "../src/MiniPair.sol";
+import "../src/mock/MockToken.sol";
 
 contract MiniDexTest is Test {
     MiniFactory public factory;
