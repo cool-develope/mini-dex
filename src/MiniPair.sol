@@ -32,33 +32,32 @@ contract MiniPair is ERC20, ReentrancyGuard {
         unlocked = 1;
     }
 
-    function addLiquidity(uint256 amount0Desired, uint256 amount1Desired, address to)
+    function addLiquidity(address to)
         external
         nonReentrant
-        returns (uint256 amount0, uint256 amount1)
+        returns (uint256 liquidity)
     {
-        require(amount0Desired > 0 && amount1Desired > 0, "MiniPair: INSUFFICIENT_INPUT_AMOUNT");
+        uint256 _reserve0 = reserve0;
+        uint256 _reserve1 = reserve1;
+        uint256 balance0 = IERC20(token0).balanceOf(address(this));
+        uint256 balance1 = IERC20(token1).balanceOf(address(this));
 
-        uint256 totalSupply = totalSupply();
-        if (totalSupply == 0) {
-            amount0 = amount0Desired;
-            amount1 = amount1Desired;
-            _mint(to, sqrt(amount0 * amount1));
+        uint256 amount0 = balance0 - _reserve0;
+        uint256 amount1 = balance1 - _reserve1;
+
+        require(amount0 > 0 && amount1 > 0, "MiniPair: INSUFFICIENT_INPUT_AMOUNT");
+
+        uint256 _totalSupply = totalSupply();
+        if (_totalSupply == 0) {
+            liquidity = sqrt(amount0 * amount1);
+            _mint(to, liquidity);
         } else {
-            amount0 = amount0Desired;
-            amount1 = (amount0 * reserve1) / reserve0;
-            if (amount1 > amount1Desired) {
-                amount1 = amount1Desired;
-                amount0 = (amount1 * reserve0) / reserve1;
-            }
-            uint256 liquidity = min((amount0 * totalSupply) / reserve0, (amount1 * totalSupply) / reserve1);
+            uint256 _liquidity0 = amount0 * _totalSupply / _reserve0;
+            uint256 _liquidity1 = amount1 * _totalSupply / _reserve1;
+            liquidity = _liquidity0 < _liquidity1 ? _liquidity0 : _liquidity1;
             require(liquidity > 0, "MiniPair: INSUFFICIENT_LIQUIDITY_MINTED");
             _mint(to, liquidity);
         }
-
-        IERC20(token0).safeTransferFrom(msg.sender, address(this), amount0);
-        IERC20(token1).safeTransferFrom(msg.sender, address(this), amount1);
-
         _update();
     }
 

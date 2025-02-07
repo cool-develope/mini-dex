@@ -34,15 +34,11 @@ contract MiniRouter {
         (amountA, amountB) = _calculateLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
 
         // Transfer tokens to this contract first
-        IERC20(tokenA).safeTransferFrom(msg.sender, address(this), amountA);
-        IERC20(tokenB).safeTransferFrom(msg.sender, address(this), amountB);
-
-        // Approve pair contract to spend tokens
-        IERC20(tokenA).approve(pair, amountA);
-        IERC20(tokenB).approve(pair, amountB);
+        IERC20(tokenA).transferFrom(msg.sender, address(pair), amountA);
+        IERC20(tokenB).transferFrom(msg.sender, address(pair), amountB);
 
         // Add liquidity to pair
-        MiniPair(pair).addLiquidity(amountA, amountB, to);
+        MiniPair(pair).addLiquidity(to);
     }
 
     function removeLiquidity(
@@ -148,7 +144,11 @@ contract MiniRouter {
         amounts[0] = amountIn;
         for (uint256 i = 0; i < path.length - 1; i++) {
             (uint256 reserve0, uint256 reserve1) = _getReserves(MiniFactory(factory).getPair(path[i], path[i + 1]));
-            amounts[i + 1] = getAmountOut(amounts[i], reserve0, reserve1);
+            if (path[i] < path[i+1]) {
+                amounts[i + 1] = getAmountOut(amounts[i], reserve0, reserve1);
+            } else {
+                amounts[i + 1] = getAmountOut(amounts[i], reserve1, reserve0);
+            }
         }
     }
 
