@@ -38,7 +38,7 @@ flowchart TD
     subgraph Swap Tokens Flow
         D -->|Transfer tokenA| O[MiniRouter]
         O -->|Route to Pair Contract| P[MiniPair]
-        P -->|Calculate Output Token| Q["`Apply Fee 
+        P -->|Calculate Output Token| Q["`Apply Fee
         Calculate Output`"]
         P -->|Update Reserves| R["`Update tokenA & tokenB
         Reserves`"]
@@ -48,7 +48,7 @@ flowchart TD
     I -->|Confirm LP Tokens| A
     N -->|Confirm tokenA & tokenB| A
     S -->|Confirm Output Token| A
-   ```
+```
 
 ## Architecture
 
@@ -104,22 +104,26 @@ foundryup
 ### Setup
 
 1. Clone the repository
+
 ```bash
 git clone <repository-url>
 cd mini-swap
 ```
 
 2. Install dependencies
+
 ```bash
 forge install
 ```
 
 3. Build the contracts
+
 ```bash
 forge build
 ```
 
 4. Run tests
+
 ```bash
 forge test
 ```
@@ -127,17 +131,20 @@ forge test
 ### Deployment
 
 1. Start a local network using Anvil
+
 ```bash
 anvil --mnemonic "test test test test test test test test test test test junk"
 ```
 
 2. Open the another terminal and deploy contracts
+
 ```bash
 source .local.env
 forge script script/Deploy.s.sol:Deploy --rpc-url $RPC_URL --broadcast
 ```
 
 Please check the logs for the deployed contracts' addresses.
+
 ```log
 == Logs ==
   Deployed contracts:
@@ -148,6 +155,7 @@ Please check the logs for the deployed contracts' addresses.
 ```
 
 3. Interact with the contracts using Cast
+
 ```bash
 # Mint tokens for testing
 cast send 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 "mint(address,uint256)" 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
@@ -192,11 +200,13 @@ cast --to-dec $(cast call 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 "balanceOf(
 ### Testing
 
 1. Run tests
+
 ```bash
 forge test
 ```
 
 2. Run coverage
+
 ```bash
 forge coverage
 ```
@@ -222,6 +232,7 @@ forge coverage
 ## Deployment to Sepolia
 
 1. Create a `.env` file with your private key and Infura/Alchemy API key:
+
 ```bash
 export PRIVATE_KEY=your_private_key
 export RPC_URL=your_sepolia_rpc_url
@@ -229,26 +240,29 @@ export ETHERSCAN_KEY=your_etherscan_api_key
 ```
 
 2. Deploy the contracts:
+
 ```bash
 source .env
 forge script script/Deploy.s.sol:Deploy --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY
 ```
 
 If you don't have an Etherscan API key, you can remove the `--verify` and `--etherscan-api-key` flags.
+
 ```bash
 forge script script/Deploy.s.sol:Deploy --rpc-url $RPC_URL --broadcast
 ```
 
 Here are the deployed contracts' addresses:
 
-|  **Contract Name**  |  **Address  (Etherscan Link)**                                                                  |
-|---------------------|---------------------------------------------------------------------------------------------------|
-| Factory            | [0x7b9EA8a077f25CdEb98c1DfCf795c6b96c0B002b](https://sepolia.etherscan.io/address/0x7b9EA8a077f25CdEb98c1DfCf795c6b96c0B002b)  |
-| Router             | [0x986698D6840ef385CF23620AeFe1568989D7586C](https://sepolia.etherscan.io/address/0x986698D6840ef385CF23620AeFe1568989D7586C)  |
-| Token A            | [0xB61F70350545713349f1EddC770b031466919079](https://sepolia.etherscan.io/address/0xB61F70350545713349f1EddC770b031466919079)  |
-| Token B            | [0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B](https://sepolia.etherscan.io/address/0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B)  |
+| **Contract Name** | **Address (Etherscan Link)**                                                                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Factory           | [0x7b9EA8a077f25CdEb98c1DfCf795c6b96c0B002b](https://sepolia.etherscan.io/address/0x7b9EA8a077f25CdEb98c1DfCf795c6b96c0B002b) |
+| Router            | [0x986698D6840ef385CF23620AeFe1568989D7586C](https://sepolia.etherscan.io/address/0x986698D6840ef385CF23620AeFe1568989D7586C) |
+| Token A           | [0xB61F70350545713349f1EddC770b031466919079](https://sepolia.etherscan.io/address/0xB61F70350545713349f1EddC770b031466919079) |
+| Token B           | [0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B](https://sepolia.etherscan.io/address/0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B) |
 
 3. Interact with the contracts using Cast:
+
 ```bash
 # Mint tokens for testing
 cast send 0xB61F70350545713349f1EddC770b031466919079 "mint(address,uint256)" <your_wallet_address> 10000000000000 --rpc-url $RPC_URL --private-key $PRIVATE_KEY
@@ -293,16 +307,17 @@ cast --to-dec $(cast call 0x7D5849b2d0f69550ba8d01714ff93ab74c02ed7B "balanceOf(
 ## Design Decisions & Assumptions
 
 1. Fee Structure
+
    - Fees are set per pair at creation time
    - Default swap fee is 0.3% (30 basis points)
 
 2. Intentional Omissions
+
    - No flash loans
    - No price oracles
-   - No governance mechanism
+   - No governance mechanisms
 
 3. Security Considerations
    - Reentrancy protection
    - Checks-Effects-Interactions pattern
    - SafeERC20 for token transfers
-
